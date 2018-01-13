@@ -14,6 +14,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
@@ -33,7 +34,7 @@ public class Produto extends JFrame {
 	private JTextField txDescricao;
 	private JTextField textField_7;
 	private JTextField txQuantidade;
-	private JFormattedTextField txValorcusto;
+	private JTextField txValorcusto;
 	private JTextField txValorfrete;
 	private JTextField txValorSubstituicao;
 	private JTextField txValoricms;
@@ -139,7 +140,6 @@ public class Produto extends JFrame {
 			@Override
 			public void focusLost(FocusEvent arg0) {
 				formataCampo(txValorcusto, decimalFormat, "V");
-				recalculaCusto();
 			}
 		});
 		txValorcusto.setText(valorPadraoMoeda);
@@ -157,11 +157,10 @@ public class Produto extends JFrame {
 			@Override
 			public void focusLost(FocusEvent e) {
 				formataCampo(txValorfrete, decimalFormat, "V");
-				recalculaCusto();
 			}
 
-			
 		});
+
 		txValorfrete.setToolTipText("Insira o valor do frete.");
 		txValorfrete.setText(valorPadraoMoeda);
 		txValorfrete.setColumns(10);
@@ -173,7 +172,6 @@ public class Produto extends JFrame {
 			@Override
 			public void focusLost(FocusEvent arg0) {
 				formataCampo(txValorSubstituicao, decimalFormat, "V");
-				recalculaCusto();
 			}
 		});
 		txValorSubstituicao.setToolTipText("Insira o valor da Substitui\u00E7\u00E3o tributaria.");
@@ -193,9 +191,8 @@ public class Produto extends JFrame {
 		txValoricms = new JTextField();
 		txValoricms.addFocusListener(new FocusAdapter() {
 			@Override
-			public void focusLost(FocusEvent e) {
-				Produto.this.formataCampo(txValoricms, decimalFormat, "P");
-				recalculaCusto();
+			public void focusLost(FocusEvent arg0) {
+				formataCampo(txValoricms, decimalFormatPorc, "P");
 			}
 		});
 		txValoricms.setToolTipText("Insira o valor do ICMS.");
@@ -208,8 +205,7 @@ public class Produto extends JFrame {
 		txValoripi.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				Produto.this.formataCampo(txValoripi, decimalFormat, "V");
-				recalculaCusto();
+				formataCampo(txValoripi, decimalFormat, "V");
 			}
 		});
 		txValoripi.setToolTipText("Insira o valor do IPI.");
@@ -227,6 +223,12 @@ public class Produto extends JFrame {
 		panelDados.add(lblPercSimplesr);
 
 		txPercsimples = new JTextField();
+		txPercsimples.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent arg0) {
+				formataCampo(txPercsimples, decimalFormatPorc, "P");
+			}
+		});
 		txPercsimples.setToolTipText("Insira o percentual do Simples Nacional.");
 		txPercsimples.setText(valorPadraoPorc);
 		txPercsimples.setColumns(10);
@@ -250,6 +252,12 @@ public class Produto extends JFrame {
 		panelDados.add(lblMargemDeLucro);
 
 		txPercavista = new JTextField();
+		txPercavista.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent arg0) {
+				formataCampo(txPercavista, decimalFormatPorc, "P");
+			}
+		});
 		txPercavista.setToolTipText("Insira o percentual de lucro avista.");
 		txPercavista.setText(valorPadraoPorc);
 		txPercavista.setColumns(10);
@@ -257,6 +265,12 @@ public class Produto extends JFrame {
 		panelDados.add(txPercavista);
 
 		txPercprazo = new JTextField();
+		txPercprazo.addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusLost(FocusEvent arg0) {
+				formataCampo(txPercprazo, decimalFormatPorc, "P");
+			}
+		});
 		txPercprazo.setToolTipText("Insira o percentual de lucro a prazo.");
 		txPercprazo.setText(valorPadraoPorc);
 		txPercprazo.setColumns(10);
@@ -340,37 +354,52 @@ public class Produto extends JFrame {
 		contentPane.add(btnNewButton);
 	}
 
-	
-	private void formataCampo(JTextField textField, DecimalFormat decimalFormat, String tipo) {
-		RemoveCaracteres caracteres = new RemoveCaracteres();
-		if (tipo == "V") {
-		textField.setText(decimalFormat
-				.format(Double.parseDouble(caracteres.removeCaracterDinheiro(textField.getText()))));
-		recalculaCusto();
-		}else if (tipo == "P") {
-			textField.setText(decimalFormat
-				.format(Double.parseDouble(caracteres.removeCaracterPorcentagem(textField.getText()))));
-			recalculaCusto();
-		}
-	}
-	
-	public void recalculaCusto() {
+	public void recalculaCusto(String tipo) {
 		List<String> listaCampos = new ArrayList<>();
 		RemoveCaracteres caracteres = new RemoveCaracteres();
 		DecimalFormat decimalFormat = new DecimalFormat("R$ #,##0.00");
+		DecimalFormat decimalFormatPorc = new DecimalFormat("#,## %0.00");
 		Double valorCusto = Double.parseDouble(caracteres.removeCaracterDinheiro(txValorcusto.getText()));
 		Double valorFrete = Double.parseDouble(caracteres.removeCaracterDinheiro(txValorfrete.getText()));
 		Double valorSubstituicao = Double.parseDouble(caracteres.removeCaracterDinheiro(txValorSubstituicao.getText()));
 		Double valorIpi = Double.parseDouble(caracteres.removeCaracterDinheiro(txValoripi.getText()));
+		Double valorDarfIcms = Double.parseDouble(caracteres.removeCaracterPorcentagem(txValoricms.getText()));
 		Double valorCustoCalc = Double.parseDouble(caracteres.removeCaracterDinheiro(txValorCustoCalc.getText()));
 		Double valorAvista = Double.parseDouble(caracteres.removeCaracterDinheiro(txValoravista.getText()));
+		Double valorPrazo = Double.parseDouble(caracteres.removeCaracterDinheiro(txValorprazo.getText()));
+		Double percSimples = Double.parseDouble(caracteres.removeCaracterPorcentagem(txPercsimples.getText()));
 		Double percAvista = Double.parseDouble(caracteres.removeCaracterPorcentagem(txPercavista.getText()));
 		Double percPrazo = Double.parseDouble(caracteres.removeCaracterPorcentagem(txPercprazo.getText()));
-		valorCustoCalc = valorCusto + valorFrete + valorSubstituicao + valorIpi;
+		valorCustoCalc = valorCusto + valorFrete + valorSubstituicao + valorIpi + (valorDarfIcms / 100)
+				+ (percSimples / 100);
 
-		valorAvista = valorCustoCalc * percAvista / 100;
+		if (tipo.equals("P")) {
+			JOptionPane.showMessageDialog(null, valorCustoCalc + " " + percAvista + "     " + (valorCustoCalc * percAvista));
+			valorAvista = valorCustoCalc + (valorCustoCalc* percAvista / 100);
+			valorPrazo = valorAvista + (valorAvista * percPrazo / 100);
+		} else {
+			percAvista = valorAvista / valorCustoCalc * 100;
+		}
 
+		txValorcusto.setText(decimalFormat.format(valorCusto));
+		txValorfrete.setText(decimalFormat.format(valorFrete));
+		txValorSubstituicao.setText(decimalFormat.format(valorSubstituicao));
+		txValoripi.setText(decimalFormat.format(valorIpi));
+		txValorcusto.setText(decimalFormat.format(valorCusto));
 		txValorCustoCalc.setText(decimalFormat.format(valorCustoCalc));
 		txValoravista.setText(decimalFormat.format(valorAvista));
+	}
+
+	private void formataCampo(JTextField textField, DecimalFormat decimalFormat, String tipo) {
+		RemoveCaracteres caracteres = new RemoveCaracteres();
+		if (tipo == "V") {
+			textField.setText(
+					decimalFormat.format(Double.parseDouble(caracteres.removeCaracterDinheiro(textField.getText()))));
+			recalculaCusto("V");
+		} else if (tipo == "P") {
+			textField.setText(decimalFormat
+					.format(Double.parseDouble(caracteres.removeCaracterPorcentagem(textField.getText())) / 100));
+			recalculaCusto("P");
+		}
 	}
 }
